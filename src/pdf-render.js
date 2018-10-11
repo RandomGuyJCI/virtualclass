@@ -1,3 +1,4 @@
+var totalRender = 0;
 (function (window) {
     function pdfRender(){
         return {
@@ -46,7 +47,7 @@
                 virtualclass.gObj.getDocumentTimeout = setTimeout(
                     function (){
                             that.wbId = currNote;
-                            console.log('-----------START----------');
+                            console.log('-----------START ' +virtualclass.currApp+'----------');
                             console.log('PDF render request to pdf.js 1');
                             PDFJS.workerSrc = whiteboardPath + "build/src/pdf.worker.min.js";
                             PDFJS.getDocument(doc).then(function (pdf) {
@@ -380,13 +381,16 @@
 
                     var that = this;
                     console.log('PDF render initiate to display pdf on canvas 3');
+                    if(totalRender == 4){
+                        // alert('suman bogati');
+                        // debugger;
+                    }
                     page.render(renderContext).then(
                         function (){
                             console.log('PDF render DONE 4');
                             console.log('-----------END----------');
-                            // console.log('PDF rendered actual 2');
-                            // var url = canvas.toDataURL('image/jpeg');
-                            // canvas.style.background = 'url(' + url + ')';
+                            totalRender++
+                            console.log('Pdf render total page ' + totalRender);
                             canvas.parentNode.dataset.pdfrender = true;
                             // canvas.style.backgroundRepeat = 'no-repeat';
                             that[wb] = {pdfrender : true};
@@ -484,7 +488,7 @@
                         console.log('Start whiteboard replay from local storage');
                         virtualclass.wb[wb].utility.replayFromLocalStroage(virtualclass.gObj.tempReplayObjs[wb]);
                         virtualclass.vutil.removeClass('virtualclassCont', 'pdfRendering');
-                        this.fitToScreenIfNeed();
+                       // this.fitToScreenIfNeed();
 
                     }
                 } else {
@@ -500,7 +504,7 @@
                     setTimeout(
                         function (){
                             virtualclass.vutil.removeClass('virtualclassCont', 'pdfRendering');
-                            that.fitToScreenIfNeed();
+                            //that.fitToScreenIfNeed();
                         }, 500
                     );
                 }
@@ -697,11 +701,39 @@
                 var virtualclassCont = document.querySelector('#virtualclassCont');
                 if(virtualclassCont != null){
                     var containerWidth = virtualclassCont.offsetWidth;
+                    var reduceVal = 430;
+                    if(containerWidth > virtualclassCont.offsetHeight){
+                        var diff = (containerWidth -  virtualclassCont.offsetHeight);
+
+                        /**
+                         * reduceVal is maintains the canvas scale and avoids the scroll
+                         * The value would be different according o different browser resolution
+                         * **/
+                        if(diff <= 350){
+                            reduceVal = 450;
+                        }else if(diff <= 400){
+                            reduceVal = 550;
+                        }else if (diff <= 600){
+                            reduceVal = 580;
+                        }else if(diff <= 700){
+                            reduceVal = 630;
+                        }else if(diff <= 800){
+                            reduceVal = 680;
+                        }else if(diff <= 900){
+                            reduceVal = 730;
+                        }else {
+                            reduceVal = 780;
+                        }
+                    }
+
                 }else {
                     var containerWidth = window.innerWidth;
                 }
 
-                var viewport = page.getViewport((+(containerWidth - 480) / page.getViewport(1.0).width));
+                console.log('Reduce value diff ' + reduceVal + '( '+containerWidth +' - ' +virtualclassCont.offsetHeight +')');
+
+
+                var viewport = page.getViewport((+(containerWidth - reduceVal) / page.getViewport(1.0).width));
                 this.firstTime = false;
                 return viewport;
             },
